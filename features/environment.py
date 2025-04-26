@@ -10,6 +10,10 @@ from webdriver_manager.firefox import GeckoDriverManager
 from app.application import Application
 from dotenv import load_dotenv
 
+import os
+from datetime import datetime
+
+
 # Load environment variables
 load_dotenv()
 
@@ -20,14 +24,16 @@ def browser_init(context, scenario_name):
     :param scenario_name: current test scenario name
     """
     # Change this as needed
-    browser_name = 'chrome'  # or 'firefox', 'safari', 'browserstack'
+    browser_name = 'chrome'  # or 'chrome', 'firefox', 'safari', 'browserstack'
 
     if browser_name == 'chrome':
         print("\nLaunching Local ChromeDriver")
         driver_path = ChromeDriverManager().install()
         service = Service(driver_path)
         options = ChromeOptions()
-        options.add_argument("--start-maximized")
+        # options.add_argument("--start-maximized")
+        options.add_argument("--headless=new")  # headless
+        options.add_argument("--window-size=1920,1080") # window size for headless
         context.driver = webdriver.Chrome(service=service, options=options)
 
     elif browser_name == 'firefox':
@@ -35,7 +41,9 @@ def browser_init(context, scenario_name):
         driver_path = GeckoDriverManager().install()
         service = FirefoxService(driver_path)
         options = FirefoxOptions()
-        options.add_argument("--start-maximized")
+        # options.add_argument("--start-maximized")
+        options.add_argument("--headless") # headless
+        options.add_argument("--window-size=1920,1080") # window size for headless
         context.driver = webdriver.Firefox(service=service, options=options)
 
     elif browser_name == 'safari':
@@ -82,10 +90,60 @@ def before_scenario(context, scenario):
 def before_step(context, step):
     print('\nStarted step: ', step)
 
+#
+# def after_step(context, step):
+#     if step.status == 'failed':
+#         print('\nStep failed: ', step)
+
+#
+# def after_step(context, step):
+#     if step.status == 'failed':
+#         print('\nStep failed: ', step)
+#
+#         # Create a screenshots directory if it doesn't exist
+#         screenshots_dir = 'screenshots'
+#         os.makedirs(screenshots_dir, exist_ok=True)
+#
+#         # Create a unique filename
+#         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+#         screenshot_name = f"{screenshots_dir}/{step.name.replace(' ', '_')}_{timestamp}.png"
+#
+#         # Take screenshot
+#         context.driver.save_screenshot(screenshot_name)
+#         print(f"Screenshot saved: {screenshot_name}")
 
 def after_step(context, step):
     if step.status == 'failed':
         print('\nStep failed: ', step)
+
+        # Debug folder setup
+        debug_dir = 'debug_dumps'
+        os.makedirs(debug_dir, exist_ok=True)
+
+        # Timestamp and filename base
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        base_name = step.name.replace(' ', '_')
+
+        # Screenshot
+        screenshot_path = f"{debug_dir}/{base_name}_{timestamp}.png"
+        context.driver.save_screenshot(screenshot_path)
+        print(f"🖼️ Screenshot saved: {screenshot_path}")
+
+        # Current URL
+        current_url = context.driver.current_url
+        print(f"🌐 Current URL: {current_url}")
+
+        # Cookies
+        cookies = context.driver.get_cookies()
+        print("🍪 Cookies:")
+        for cookie in cookies:
+            print(f"   {cookie['name']} = {cookie.get('value')}")
+
+        # Optional: Dump page source (if you're stuck)
+        html_path = f"{debug_dir}/{base_name}_{timestamp}.html"
+        with open(html_path, 'w', encoding='utf-8') as f:
+            f.write(context.driver.page_source)
+        print(f"📄 Page source saved: {html_path}")
 
 
 def after_scenario(context, scenario):

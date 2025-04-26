@@ -1,3 +1,5 @@
+import time
+
 from pages.base_page import Page
 
 class SignInPage(Page):
@@ -11,9 +13,11 @@ class SignInPage(Page):
         # self.slow_type(text, *locator)
         self.input_text(text, *locator)
 
+
     def enter_user_password(self, text, *locator):
         # self.slow_type(text, *locator)
         self.input_text(text, *locator)
+
 
     def click_login_button(self, *locator):
         self.wait_until_clickable_click(*locator)
