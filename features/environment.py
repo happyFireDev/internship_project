@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 
-
 # Load environment variables
 load_dotenv()
 
@@ -24,7 +23,7 @@ def browser_init(context, scenario_name):
     :param scenario_name: current test scenario name
     """
     # Change this as needed
-    browser_name = 'chrome'  # or 'chrome', 'firefox', 'safari', 'browserstack'
+    browser_name = 'browserstack'  # or 'chrome', 'firefox', 'safari', 'browserstack'
 
     if browser_name == 'chrome':
         print("\nLaunching Local ChromeDriver")
@@ -52,12 +51,17 @@ def browser_init(context, scenario_name):
 
     elif browser_name == 'browserstack':
         print("\nLaunching BrowserStack Driver")
-        bs_user = os.getenv('BROWSERSTACK_USERNAME')
-        bs_key = os.getenv('BROWSERSTACK_ACCESS_KEY')
+        bs_user =''
+        bs_key = ''
+
         url = f'https://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub'
 
-        bs_capabilities = {
-            "browserName": "Chrome",
+        if not bs_user or not bs_key:
+            raise Exception("BrowserStack credentials are missing. Check your .env file.")
+
+        bs_capabilities = [
+            {
+            "browserName": "Firefox",
             "browserVersion": "latest",
             "bstack:options": {
                 "os": "Windows",
@@ -65,7 +69,30 @@ def browser_init(context, scenario_name):
                 "sessionName": scenario_name,
                 "buildName": "QA Automation Build"
             }
-        }
+        },
+        {
+            "browserName": "Chrome",
+            "browserVersion": "latest",
+            "bstack:options": {
+                "os": "OS X",
+                "osVersion": "Monterey",
+                "sessionName": scenario_name,
+                "buildName": "QA Automation Build"
+            }
+        },
+            {
+                "browserName": "Safari",
+                "browserVersion": "15.6",
+                "bstack:options": {
+                    "os": "OS X",
+                    "osVersion": "Monterey",
+                    "sessionName": scenario_name,
+                    "buildName": "QA Automation Build"
+                }
+            }
+        ]
+
+        bs_capabilities = bs_capabilities[1]  # 👈 Pick one from the list
 
         options = ChromeOptions()
         options.set_capability('browserName', bs_capabilities["browserName"])

@@ -4,3 +4,6 @@ selenium
 webdriver-manager
 python-dotenv
 undetected-chromedriver
+browserstack-local
+psutil
+browserstack-sdk

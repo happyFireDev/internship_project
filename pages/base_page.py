@@ -48,18 +48,19 @@ class Page:
             time.sleep(delay)
 
 
-    def wait_until_element_present(self, *locator):
-        self.wait.until(
-            EC.presence_of_element_located(*locator),
-            message=f'Element not present by {locator}'
+    def wait_until_element_text_is_present(self, locator, expected_text, timeout=10):
+        """
+        Wait until the element is present and its text exactly matches expected_text.
+        """
+
+        def text_matches(driver):
+            element = driver.find_element(*locator)
+            return element if element.text.strip() == expected_text else False
+
+        return WebDriverWait(self.driver, timeout).until(
+            text_matches,
+            message=f"Expected text '{expected_text}' not found in element {locator}"
         )
-
-
-    def wait_until_text_is_present(self, locator, expected_text):
-        self.wait.until(
-        EC.text_to_be_present_in_element(locator, expected_text),
-        message = f"Expected text '{expected_text}' not found in element: {locator}"
-    )
 
 
     def wait_until_clickable(self, *locator):

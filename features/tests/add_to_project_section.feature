@@ -8,7 +8,8 @@ Feature: Testing the Add a project section under the settings menu
     And Click login button
     Then Verify user is fully logged in
     When Click on the settings option
-    And Click on Add a project
+    Then Verify user is fully logged in
+    When Click on Add a project
     Then Verify the right page opens
     When Add some test information to the input fields
     Then Verify the correct information is present in the input fields

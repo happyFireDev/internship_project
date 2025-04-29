@@ -19,8 +19,7 @@ def click_settings_link_in_side_name(context):
 
 @then("Verify user is fully logged in")
 def verify_side_menu_loaded(context):
-    (context.app.side_nav_ui.
-    verify_user_is_fully_logged_in_by_checking_company_name(
+    (context.app.side_nav_ui.verify_user_is_fully_logged_in_by_checking_company_name(
     LOGIN_SUCCESS_LOCATOR, EXPECTED_LOGIN_TEXT)
     )
 
