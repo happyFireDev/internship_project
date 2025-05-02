@@ -13,9 +13,19 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 
-# Load environment variables
-load_dotenv()
+def before_all(context):
+    # Load environment variables from .env file
+    load_dotenv()
 
+    # Access env variables
+
+    # browserstack creds
+    context.bs_user = os.getenv("BROWSERSTACK_USERNAME")
+    context.bs_key = os.getenv("BROWSERSTACK_ACCESS_KEY")
+
+    # https://soft.reelly.io/ qa automation creds
+    context.user_email = os.getenv("REELLY_USER_EMAIL_ADDRESS")
+    context.user_password = os.getenv("REELLY_USER_PASSWORD")
 
 def browser_init(context, scenario_name):
     """
@@ -23,7 +33,7 @@ def browser_init(context, scenario_name):
     :param scenario_name: current test scenario name
     """
     # Change this as needed
-    browser_name = 'browserstack'  # or 'chrome', 'firefox', 'safari', 'browserstack'
+    browser_name = 'chrome'  # or 'chrome', 'firefox', 'safari', 'browserstack'
 
     if browser_name == 'chrome':
         print("\nLaunching Local ChromeDriver")
@@ -51,12 +61,10 @@ def browser_init(context, scenario_name):
 
     elif browser_name == 'browserstack':
         print("\nLaunching BrowserStack Driver")
-        bs_user =''
-        bs_key = ''
 
-        url = f'https://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub'
+        url = f'https://{context.bs_user}:{context.bs_key}@hub-cloud.browserstack.com/wd/hub'
 
-        if not bs_user or not bs_key:
+        if not context.bs_user or not context.bs_key:
             raise Exception("BrowserStack credentials are missing. Check your .env file.")
 
         bs_capabilities = [
