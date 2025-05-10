@@ -1,5 +1,7 @@
 import os
+from datetime import datetime
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -10,12 +12,14 @@ from webdriver_manager.firefox import GeckoDriverManager
 from app.application import Application
 from dotenv import load_dotenv
 
-import os
-from datetime import datetime
 
 def before_all(context):
     # Load environment variables from .env file
     load_dotenv()
+
+    # ✅ [NEW] Set the browser/platform manually here
+    # Options: 'chrome', 'chrome_mobile_view', 'firefox', 'safari', 'browserstack', 'browserstack_ios'
+    context.browser_name = 'browserstack_ios'
 
     # Access env variables
 
@@ -32,8 +36,9 @@ def browser_init(context, scenario_name):
     :param context: Behave context
     :param scenario_name: current test scenario name
     """
-    # Change this as needed
-    browser_name = 'chrome'  # or 'chrome', 'firefox', 'safari', 'browserstack'
+    # ✅ [MODIFIED] Use browser name from context
+    browser_name = context.browser_name
+
 
     if browser_name == 'chrome':
         print("\nLaunching Local ChromeDriver")
@@ -44,6 +49,15 @@ def browser_init(context, scenario_name):
         options.add_argument("--headless=new")  # headless
         options.add_argument("--window-size=1920,1080") # window size for headless
         context.driver = webdriver.Chrome(service=service, options=options)
+
+
+    elif browser_name == 'chrome_mobile_view':
+
+        mobile_emulation = {"deviceName": "Nexus 5"}
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_experimental_option("mobileEmulation", mobile_emulation)
+        context.driver = webdriver.Chrome(options=chrome_options)
+        context.platform = 'mobile'  # Passing mobile platform to context
 
     elif browser_name == 'firefox':
         print("\nLaunching Local FirefoxDriver")
@@ -109,10 +123,41 @@ def browser_init(context, scenario_name):
 
         context.driver = webdriver.Remote(command_executor=url, options=options)
 
+    elif browser_name == 'browserstack_ios':
+
+        print("\nLaunching BrowserStack iOS Safari")
+
+        if not context.bs_user or not context.bs_key:
+            raise Exception("BrowserStack credentials are missing. Check your .env file.")
+
+        from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
+
+        url = f'https://{context.bs_user}:{context.bs_key}@hub-cloud.browserstack.com/wd/hub'
+
+        capabilities = {
+            "browserName": "Safari",
+            "platformName": "iOS",
+            "device": "iPhone 13",
+            "realMobile": "true",
+            "os_version": "15",
+            "name": scenario_name,
+            "build": "QA Automation Build - iOS Safari",
+            "browserstack.user": context.bs_user,
+            "browserstack.key": context.bs_key
+        }
+
+        options = Options()
+        for key, value in capabilities.items():
+            options.set_capability(key, value)
+
+        context.driver = webdriver.Remote(command_executor=url, options=options)
+        context.platform = 'mobile'
+
     else:
         raise Exception(f"Browser '{browser_name}' is not supported")
 
-    context.driver.implicitly_wait(4)
+    if context.browser_name != 'browserstack_ios':
+        context.driver.implicitly_wait(4)
     context.driver.wait = WebDriverWait(context.driver, timeout=10)
     context.app = Application(context.driver)
 
